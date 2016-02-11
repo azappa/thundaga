@@ -2,5 +2,6 @@ langs:
   - it
   - en
   - ru
-default:
-  - it
+default: 'it'
+templateDir: './templates'
+outputDir: './build'
