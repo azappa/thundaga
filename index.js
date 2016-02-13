@@ -6,23 +6,14 @@ const yaml = require('yamljs');
 const cons = require('better-console');
 const globule = require('globule');
 const yargs = require('yargs').argv;
+const vfs = require('vinyl-fs');
+const File = require('vinyl');
+const mapStream = require('map-stream');
 
 
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
 
 
-const $t = function $t() { console.log(Array.apply(null, arguments)); return arguments[0]; };
-
-const t = function t(a, b) { console.log('a is: ', a, ' and b is: ', b); return a; };
-jade.filters.t = t;
-
-
-
-if (yargs.testing) {
-  const html = jade.renderFile(`./templates/index.jade`, {$t: $t});
-  console.log(html);
-  process.exit();
-}
 
 //  -- check if file or dir exists --
 const doesItExist = (s) => {
@@ -50,35 +41,83 @@ if (!_config.langs || _config.langs.length < 1) {
   process.exit();
 }
 
-
-//  -- locales --
-if (!doesItExist(`./locale`)) {
-  cons.warn(`> Locale dir not found. Making dir now.`);
-  fs.mkdirSync(`./locale`);
-}
-
-const _locales = fs.readdirSync(`./locale`);
-if (!_locales || _locales.length === 0) {
-  cons.warn(
-    `> Error, you have zero translated yaml files into ./locale for data loading. ` +
-    `Creating them now.`
-  );
-  _config.langs.forEach(l => {
-    cons.info(`> Creating file for ${l} in ./locale/${l}.yaml`);
-    fs.writeFileSync(`./locale/${l}.yaml`, '', 'utf-8');
-  });
-} else {
-  cons.info('> You already got your files for translation.');
-  _config.langs.forEach(l => {
-    cons.info(`> Content for ${l} is `, yaml.load(`./locale/${l}.yaml`));
-  });
-}
-
-
-if (!doesItExist(_config.templateDir || `./templates`)) {
-  cons.error(`> Error, you don't set a template directory with jade files in your config.`);
+if (!_config.localesDir) {
+  cons.error(`> Error, locales dir is not defined.`);
   process.exit();
 }
 
-const _templates = globule.find(`${(_config.templateDir || './templates')}/**/*.jade`);
-cons.info(_templates);
+
+if (yargs.init) {
+  //  -- locales --
+  if (!doesItExist(`${_config.localesDir}`)) {
+    cons.warn(`> Locale dir not found. Making dir now.`);
+    fs.mkdirSync(`${_config.localesDir}`);
+  }
+
+  const _locales = fs.readdirSync(`${_config.localesDir}`);
+  if (!_locales || _locales.length === 0) {
+    cons.warn(
+      `> Error, you have zero translated yaml files into ${_config.localesDir} for data loading. ` +
+      `Creating them now.`
+    );
+    _config.langs.forEach(l => {
+      cons.info(`> Creating file for ${l} in ${_config.localesDir}/${l}.yaml`);
+      fs.writeFileSync(`${_config.localesDir}/${l}.yaml`, '', 'utf-8');
+    });
+  } else {
+    cons.warn('> You already got your files for translation.');
+    _config.langs.forEach(l => {
+      cons.info(`> Content for ${l} is `, yaml.load(`${_config.localesDir}/${l}.yaml`));
+    });
+  }
+
+  process.exit();
+}
+
+
+//  -- jade part --
+if (yargs.testjade) {
+  if (!doesItExist(_config.templateDir || `./templates`)) {
+    cons.error(`> Error, you don't set a template directory with jade files in your config.`);
+    process.exit();
+  }
+
+  const $t = function $t() {
+    // console.log(Array.apply(null, arguments));
+    //  -- usually the first argument is the text / variable string --
+    return arguments[0];
+  };
+
+
+  const _templatesFiles = globule.find(`${(_config.templateDir || './templates')}/**/*.jade`);
+  // cons.info(_templatesFiles);
+
+
+  const buildJadeFile = function buildJadeFile(f, callback) {
+    const html = jade.renderFile(`${f.path}`, { $t });
+    // cons.info(`> file path is: ${f.path}`);
+    // cons.info(`> compiled html is: ${html}`);
+    const htmlFile = new File({
+      contents: new Buffer(html),
+      path: `${(f.path).replace('.jade', '.html')}`,
+      base: `${(_config.templateDir || './templates')}`,
+    });
+
+    callback(null, htmlFile);
+  };
+
+
+  vfs
+    .src(
+      _templatesFiles, {
+        base: `${(_config.templateDir || './templates')}`,
+      })
+    .pipe(
+      mapStream(buildJadeFile)
+    )
+    .pipe(
+      vfs.dest(
+        `${(_config.outputDir || './build')}`
+      )
+    );
+}
