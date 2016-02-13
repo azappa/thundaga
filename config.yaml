@@ -3,5 +3,6 @@ langs:
   - en
   - ru
 default: 'it'
+localesDir: './locale'
 templateDir: './templates'
 outputDir: './build'
