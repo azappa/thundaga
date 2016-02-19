@@ -82,7 +82,7 @@ if (yargs.testjade) {
   }
 
   const $t = function $t() {
-    // console.log(Array.apply(null, arguments));
+    console.log(Array.apply(null, arguments));
     //  -- usually the first argument is the text / variable string --
     return arguments[0];
   };
@@ -93,15 +93,16 @@ if (yargs.testjade) {
 
 
   const buildJadeFile = (l, f) => {
-    const html = jade.renderFile(`${f}`, { $t });
+    const html = jade.renderFile(`${f}`, { $t, lang: l });
     const htmlFile = new File({
       contents: new Buffer(html),
       path: `${(_config.outputDir || 'dist')}/${l}${(f).replace('.jade', '.html').replace(_config.templateDir || 'templates', '')}`,
       base: `${(_config.outputDir || 'dist')}`,
     });
+    cons.log(htmlFile.dirname, htmlFile.path);
     mkdirp.sync(htmlFile.dirname);
     fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
-    //cons.info(htmlFile.path, htmlFile.base);
+    // cons.info(htmlFile.path, htmlFile.base);
   };
 
   _config.langs.forEach(l => {
@@ -109,5 +110,4 @@ if (yargs.testjade) {
       buildJadeFile(l, f);
     });
   });
-
 }
