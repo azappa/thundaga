@@ -6,9 +6,8 @@ const yaml = require('yamljs');
 const cons = require('better-console');
 const globule = require('globule');
 const yargs = require('yargs').argv;
-const vfs = require('vinyl-fs');
 const File = require('vinyl');
-const mapStream = require('map-stream');
+const mkdirp = require('mkdirp');
 
 
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
@@ -27,12 +26,12 @@ const doesItExist = (s) => {
 
 
 //  -- config opts --
-if (!doesItExist(`./config.yaml`)) {
+if (!doesItExist(`config.yaml`)) {
   cons.error(`> Error, you do not have a config file.`);
   process.exit();
 }
 
-const _config = yaml.load(`./config.yaml`);
+const _config = yaml.load(`config.yaml`);
 cons.info(`> Your config settings are: ${JSON.stringify(_config)}`);
 
 
@@ -77,7 +76,7 @@ if (yargs.init) {
 
 //  -- jade part --
 if (yargs.testjade) {
-  if (!doesItExist(_config.templateDir || `./templates`)) {
+  if (!doesItExist(_config.templateDir || `templates`)) {
     cons.error(`> Error, you don't set a template directory with jade files in your config.`);
     process.exit();
   }
@@ -89,35 +88,26 @@ if (yargs.testjade) {
   };
 
 
-  const _templatesFiles = globule.find(`${(_config.templateDir || './templates')}/**/*.jade`);
-  // cons.info(_templatesFiles);
+  const _templatesFiles = globule.find(`${(_config.templateDir || 'templates')}/**/*.jade`);
+  cons.info(_templatesFiles);
 
 
-  const buildJadeFile = function buildJadeFile(f, callback) {
-    const html = jade.renderFile(`${f.path}`, { $t });
-    // cons.info(`> file path is: ${f.path}`);
-    // cons.info(`> compiled html is: ${html}`);
+  const buildJadeFile = (l, f) => {
+    const html = jade.renderFile(`${f}`, { $t });
     const htmlFile = new File({
       contents: new Buffer(html),
-      path: `${(f.path).replace('.jade', '.html')}`,
-      base: `${(_config.templateDir || './templates')}`,
+      path: `${(_config.outputDir || 'dist')}/${l}${(f).replace('.jade', '.html').replace(_config.templateDir || 'templates', '')}`,
+      base: `${(_config.outputDir || 'dist')}`,
     });
-
-    callback(null, htmlFile);
+    mkdirp.sync(htmlFile.dirname);
+    fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
+    //cons.info(htmlFile.path, htmlFile.base);
   };
 
+  _config.langs.forEach(l => {
+    _templatesFiles.forEach(f => {
+      buildJadeFile(l, f);
+    });
+  });
 
-  vfs
-    .src(
-      _templatesFiles, {
-        base: `${(_config.templateDir || './templates')}`,
-      })
-    .pipe(
-      mapStream(buildJadeFile)
-    )
-    .pipe(
-      vfs.dest(
-        `${(_config.outputDir || './build')}`
-      )
-    );
 }
