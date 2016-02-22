@@ -16,7 +16,7 @@ marked.setOptions({
   renderer: new marked.Renderer(),
   gfm: true,
   tables: true,
-  breaks: false,
+  breaks: true,
   pedantic: false,
   sanitize: true,
   smartLists: true,
@@ -67,10 +67,7 @@ if (yargs.init) {
 
   const _locales = fs.readdirSync(`${_config.localesDir}`);
   if (!_locales || _locales.length === 0) {
-    cons.warn(
-      `> Error, you have zero translated yaml files into ${_config.localesDir} for data loading. ` +
-      'Creating them now.'
-    );
+    cons.warn(`> Error, you have zero translated yaml files into ${_config.localesDir} for data loading. Creating them now.`);
     _config.langs.forEach(l => {
       cons.info(`> Creating file for ${l} in ${_config.localesDir}/${l}.yaml`);
       fs.writeFileSync(`${_config.localesDir}/${l}.yaml`, '', 'utf-8');
@@ -96,22 +93,31 @@ if (yargs.testjade) {
   let currentL = _config.langs[0] || '';
 
   const $t = function $t(...args) {
-    const parameters = Array.apply(null, args);
     //  -- usually the first argument is the text / variable string --
-    cons.info(`parameters are > ${parameters} and currentL is ${currentL}`);
-    if (parameters.length === 0) {
-      return '-- cannot translate null --';
+    const params = Array.apply(null, args);
+    const currentTranslations = yaml.load(`${_config.localesDir}/${currentL}.yaml`) || {};
+    if (Object.keys(currentTranslations).length === 0) {
+      return `Empty translation file for ${currentL}`;
+    }
+    // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
+    // cons.dir(currentTranslations);
+
+    const thisT = currentTranslations[params[0]] || `Missing translation for ${currentL} in ${currentL} yaml file.`;
+    cons.info(thisT);
+
+    if (params.length === 0) {
+      return 'Cannot translate null key.';
     }
 
-    if (parameters.length === 1) {
-      return parameters[0];
+    if (params.length === 1) {
+      return thisT;
     }
 
-    switch (parameters[1]) {
+    switch (params[1]) {
       case 'markdown':
-        return marked(parameters[0]);
+        return marked(thisT);
       default:
-        return parameters[0];
+        return thisT;
     }
   };
 
