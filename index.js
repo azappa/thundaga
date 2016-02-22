@@ -26,7 +26,6 @@ marked.setOptions({
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
 
 
-
 //  -- check if file or dir exists --
 const doesItExist = (s) => {
   try {
@@ -98,7 +97,6 @@ if (yargs.testjade) {
 
   const $t = function $t() {
     const parameters = Array.apply(null, arguments);
-    console.log(currentL);
     //  -- usually the first argument is the text / variable string --
     if (parameters.length === 0) {
       return '-- cannot translate null --';
@@ -106,18 +104,14 @@ if (yargs.testjade) {
 
     if (parameters.length === 1) {
       return parameters[0];
-    } else {
-
-      switch(parameters[1]) {
-        case 'markdown':
-          return marked(parameters[0]);
-          break;
-        default:
-          return parameters[0];
-          break;
-      }
     }
 
+    switch (parameters[1]) {
+      case 'markdown':
+        return marked(parameters[0]);
+      default:
+        return parameters[0];
+    }
   };
 
 
@@ -127,13 +121,13 @@ if (yargs.testjade) {
 
   const buildJadeFile = (l, f) => {
     currentL = l;
-    const html = jade.renderFile(`${f}`, { $t, lang: l });
+    const html = jade.renderFile(`${f}`, { $t, lang: currentL });
     const htmlFile = new File({
       contents: new Buffer(html),
       path: `${(_config.outputDir || 'dist')}/${l}${(f).replace('.jade', '.html').replace(_config.templateDir || 'templates', '')}`,
       base: `${(_config.outputDir || 'dist')}`,
     });
-    //cons.log(htmlFile.dirname, htmlFile.path);
+    // cons.log(htmlFile.dirname, htmlFile.path);
     mkdirp.sync(htmlFile.dirname);
     fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
     // cons.info(htmlFile.path, htmlFile.base);
