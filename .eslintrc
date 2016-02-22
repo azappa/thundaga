@@ -1,6 +1,6 @@
 {
   "extends": "airbnb/base",
   "rules": {
-    "max-len": [1, 180]
+    "max-len": [0]
   }
 }

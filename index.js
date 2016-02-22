@@ -38,22 +38,22 @@ const doesItExist = (s) => {
 
 
 //  -- config opts --
-if (!doesItExist(`config.yaml`)) {
-  cons.error(`> Error, you do not have a config file.`);
+if (!doesItExist('config.yaml')) {
+  cons.error('> Error, you do not have a config file.');
   process.exit();
 }
 
-const _config = yaml.load(`config.yaml`);
+const _config = yaml.load('config.yaml');
 cons.info(`> Your config settings are: ${JSON.stringify(_config)}`);
 
 
 if (!_config.langs || _config.langs.length < 1) {
-  cons.error(`> Error, langs are not defined.`);
+  cons.error('> Error, langs are not defined.');
   process.exit();
 }
 
 if (!_config.localesDir) {
-  cons.error(`> Error, locales dir is not defined.`);
+  cons.error('> Error, locales dir is not defined.');
   process.exit();
 }
 
@@ -61,7 +61,7 @@ if (!_config.localesDir) {
 if (yargs.init) {
   //  -- locales --
   if (!doesItExist(`${_config.localesDir}`)) {
-    cons.warn(`> Locale dir not found. Making dir now.`);
+    cons.warn('> Locale dir not found. Making dir now.');
     fs.mkdirSync(`${_config.localesDir}`);
   }
 
@@ -69,7 +69,7 @@ if (yargs.init) {
   if (!_locales || _locales.length === 0) {
     cons.warn(
       `> Error, you have zero translated yaml files into ${_config.localesDir} for data loading. ` +
-      `Creating them now.`
+      'Creating them now.'
     );
     _config.langs.forEach(l => {
       cons.info(`> Creating file for ${l} in ${_config.localesDir}/${l}.yaml`);
@@ -88,16 +88,17 @@ if (yargs.init) {
 
 //  -- jade part --
 if (yargs.testjade) {
-  if (!doesItExist(_config.templateDir || `templates`)) {
-    cons.error(`> Error, you don't set a template directory with jade files in your config.`);
+  if (!doesItExist(_config.templateDir || 'templates')) {
+    cons.error('> Error, you don\'t set a template directory with jade files in your config.');
     process.exit();
   }
 
-  let currentL;
+  let currentL = _config.langs[0] || '';
 
-  const $t = function $t() {
-    const parameters = Array.apply(null, arguments);
+  const $t = function $t(...args) {
+    const parameters = Array.apply(null, args);
     //  -- usually the first argument is the text / variable string --
+    cons.info(`parameters are > ${parameters} and currentL is ${currentL}`);
     if (parameters.length === 0) {
       return '-- cannot translate null --';
     }
@@ -138,4 +139,5 @@ if (yargs.testjade) {
       buildJadeFile(l, f);
     });
   });
+  cons.info('Build complete.');
 }
