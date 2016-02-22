@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const fs = require('fs');
 const jade = require('jade');
 const yaml = require('yamljs');
@@ -9,6 +11,17 @@ const yargs = require('yargs').argv;
 const File = require('vinyl');
 const mkdirp = require('mkdirp');
 
+const marked = require('marked');
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  gfm: true,
+  tables: true,
+  breaks: false,
+  pedantic: false,
+  sanitize: true,
+  smartLists: true,
+  smartypants: false,
+});
 
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
 
@@ -81,10 +94,30 @@ if (yargs.testjade) {
     process.exit();
   }
 
+  let currentL;
+
   const $t = function $t() {
-    console.log(Array.apply(null, arguments));
+    const parameters = Array.apply(null, arguments);
+    console.log(currentL);
     //  -- usually the first argument is the text / variable string --
-    return arguments[0];
+    if (parameters.length === 0) {
+      return '-- cannot translate null --';
+    }
+
+    if (parameters.length === 1) {
+      return parameters[0];
+    } else {
+
+      switch(parameters[1]) {
+        case 'markdown':
+          return marked(parameters[0]);
+          break;
+        default:
+          return parameters[0];
+          break;
+      }
+    }
+
   };
 
 
@@ -93,13 +126,14 @@ if (yargs.testjade) {
 
 
   const buildJadeFile = (l, f) => {
+    currentL = l;
     const html = jade.renderFile(`${f}`, { $t, lang: l });
     const htmlFile = new File({
       contents: new Buffer(html),
       path: `${(_config.outputDir || 'dist')}/${l}${(f).replace('.jade', '.html').replace(_config.templateDir || 'templates', '')}`,
       base: `${(_config.outputDir || 'dist')}`,
     });
-    cons.log(htmlFile.dirname, htmlFile.path);
+    //cons.log(htmlFile.dirname, htmlFile.path);
     mkdirp.sync(htmlFile.dirname);
     fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
     // cons.info(htmlFile.path, htmlFile.base);
