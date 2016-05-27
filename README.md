@@ -5,4 +5,4 @@
 
 
 #### in development
-for testing `npm run dev -- --testjade`
+for testing `npm run dev -- --testpug`
