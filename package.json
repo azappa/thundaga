@@ -4,7 +4,7 @@
   "description": "Multilang static site builder with pug and yaml files for translations.",
   "main": "index.js",
   "scripts": {
-    "dev": "./node_modules/.bin/node index.js",
+    "dev": "node index.js",
     "test": "npm run dev -- --testpug"
   },
   "bin": {
@@ -17,10 +17,9 @@
   ],
   "author": "Alessio Zappa",
   "license": "ISC",
-  "devDependencies": {
+  "dependencies": {
     "babel-preset-es2015": "^6.18.0",
     "better-console": "^0.2.4",
-    "eslint-config-airbnb-base": "^9.0.0",
     "globule": "^1.1.0",
     "i18n": "^0.8.3",
     "marked": "^0.3.6",
