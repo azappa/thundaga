@@ -7,6 +7,9 @@
     "dev": "./node_modules/.bin/node index.js",
     "test": "npm run dev -- --testpug"
   },
+  "bin": {
+    "thundaga": "index.js"
+  },
   "keywords": [
     "i18n",
     "multilang",
