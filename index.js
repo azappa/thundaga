@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-'use strict';
 
-var fs = require('fs');
-var pug = require('pug');
-var yaml = require('yamljs');
-var cons = require('better-console');
-var globule = require('globule');
-var yargs = require('yargs').argv;
-var File = require('vinyl');
-var mkdirp = require('mkdirp');
-var marked = require('marked');
+const fs = require('fs');
+const pug = require('pug');
+const yaml = require('yamljs');
+const cons = require('better-console');
+const globule = require('globule');
+const yargs = require('yargs').argv;
+const File = require('vinyl');
+const mkdirp = require('mkdirp');
+const marked = require('marked');
+
 marked.setOptions({
   renderer: new marked.Renderer(),
   gfm: true,
@@ -18,13 +18,14 @@ marked.setOptions({
   pedantic: false,
   sanitize: true,
   smartLists: true,
-  smartypants: false
+  smartypants: false,
 });
 
-cons.info('> Called script with these parameters: ' + JSON.stringify(yargs));
+cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
+
 
 //  -- check if file or dir exists --
-var doesItExist = function doesItExist(s) {
+const doesItExist = (s) => {
   try {
     return fs.realpathSync(s);
   } catch (e) {
@@ -33,114 +34,114 @@ var doesItExist = function doesItExist(s) {
   }
 };
 
+
 //  -- config opts --
 if (!doesItExist('config.yaml')) {
   cons.error('> Error, you do not have a config file.');
   process.exit();
 }
 
-var _config = yaml.load('config.yaml');
-cons.info('> Your config settings are: ' + JSON.stringify(_config));
+const config = yaml.load('config.yaml');
+cons.info(`> Your config settings are: ${JSON.stringify(config)}`);
 
-if (!_config.langs || _config.langs.length < 1) {
+
+if (!config.langs || config.langs.length < 1) {
   cons.error('> Error, langs are not defined.');
   process.exit();
 }
 
-if (!_config.localesDir) {
+if (!config.localesDir) {
   cons.error('> Error, locales dir is not defined.');
   process.exit();
 }
 
+
 if (yargs.init) {
   //  -- locales --
-  if (!doesItExist('' + _config.localesDir)) {
+  if (!doesItExist(`${config.localesDir}`)) {
     cons.warn('> Locale dir not found. Making dir now.');
-    fs.mkdirSync('' + _config.localesDir);
+    fs.mkdirSync(`${config.localesDir}`);
   }
 
-  var _locales = fs.readdirSync('' + _config.localesDir);
-  if (!_locales || _locales.length === 0) {
-    cons.warn('> Error, you have zero translated yaml files into ' + _config.localesDir + ' for data loading. Creating them now.');
-    _config.langs.forEach(function (l) {
-      cons.info('> Creating file for ' + l + ' in ' + _config.localesDir + '/' + l + '.yaml');
-      fs.writeFileSync(_config.localesDir + '/' + l + '.yaml', '', 'utf-8');
+  const locales = fs.readdirSync(`${config.localesDir}`);
+  if (!locales || locales.length === 0) {
+    cons.warn(`> Error, you have zero translated yaml files into ${config.localesDir} for data loading. Creating them now.`);
+    config.langs.forEach((l) => {
+      cons.info(`> Creating file for ${l} in ${config.localesDir}/${l}.yaml`);
+      fs.writeFileSync(`${config.localesDir}/${l}.yaml`, '', 'utf-8');
     });
   } else {
     cons.warn('> You already got your files for translation.');
-    _config.langs.forEach(function (l) {
-      cons.info('> Content for ' + l + ' is ', yaml.load(_config.localesDir + '/' + l + '.yaml'));
+    config.langs.forEach((l) => {
+      cons.info(`> Content for ${l} is `, yaml.load(`${config.localesDir}/${l}.yaml`));
     });
   }
 
   process.exit();
 }
 
+
 //  -- pug part --
 if (yargs.testpug) {
-  (function () {
-    if (!doesItExist(_config.templateDir || 'templates')) {
-      cons.error('> Error, you don\'t set a template directory with pug files in your config.');
-      process.exit();
+  if (!doesItExist(config.templateDir || 'templates')) {
+    cons.error('> Error, you don\'t set a template directory with pug files in your config.');
+    process.exit();
+  }
+
+  let currentL = config.langs[0] || '';
+
+  const $t = function $t(...args) {
+    //  -- usually the first argument is the text / variable string --
+    const params = Array.apply(null, args);
+    const currentTranslations = yaml.load(`${config.localesDir}/${currentL}.yaml`) || {};
+    if (Object.keys(currentTranslations).length === 0) {
+      return `Empty translation file for ${currentL}`;
+    }
+    // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
+    // cons.dir(currentTranslations);
+
+    const thisT = currentTranslations[params[0]] || `Missing translation for ${params[0]} ${currentL} in ${currentL} yaml file.`;
+    cons.info(`thisT is: ${currentTranslations[params[0]]}`);
+
+    if (params.length === 0) {
+      return 'Cannot translate null key.';
     }
 
-    var currentL = _config.langs[0] || '';
+    if (params.length === 1) {
+      return thisT;
+    }
 
-    var $t = function $t() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      //  -- usually the first argument is the text / variable string --
-      var params = Array.apply(null, args);
-      var currentTranslations = yaml.load(_config.localesDir + '/' + currentL + '.yaml') || {};
-      if (Object.keys(currentTranslations).length === 0) {
-        return 'Empty translation file for ' + currentL;
-      }
-      // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
-      // cons.dir(currentTranslations);
-
-      var thisT = currentTranslations[params[0]] || 'Missing translation for ' + currentL + ' in ' + currentL + ' yaml file.';
-      cons.info(thisT);
-
-      if (params.length === 0) {
-        return 'Cannot translate null key.';
-      }
-
-      if (params.length === 1) {
+    switch (params[1]) {
+      case 'markdown':
+        return marked(thisT);
+      default:
         return thisT;
-      }
+    }
+  };
 
-      switch (params[1]) {
-        case 'markdown':
-          return marked(thisT);
-        default:
-          return thisT;
-      }
-    };
 
-    var _templatesFiles = globule.find((_config.templateDir || 'templates') + '/**/*.pug');
-    cons.info(_templatesFiles);
+  const templatesFiles = globule.find(`${(config.templateDir || 'templates')}/**/*.pug`);
+  cons.info(templatesFiles);
 
-    var buildPugFile = function buildPugFile(l, f) {
-      currentL = l;
-      var html = pug.renderFile('' + f, { $t: $t, lang: currentL });
-      var htmlFile = new File({
-        contents: new Buffer(html),
-        path: (_config.outputDir || 'dist') + '/' + l + f.replace('.pug', '.html').replace(_config.templateDir || 'templates', ''),
-        base: '' + (_config.outputDir || 'dist')
-      });
-      // cons.log(htmlFile.dirname, htmlFile.path);
-      mkdirp.sync(htmlFile.dirname);
-      fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
-      // cons.info(htmlFile.path, htmlFile.base);
-    };
 
-    _config.langs.forEach(function (l) {
-      _templatesFiles.forEach(function (f) {
-        buildPugFile(l, f);
-      });
+  const buildPugFile = (l, f) => {
+    currentL = l;
+    const html = pug.renderFile(`${f}`, { $t, lang: currentL });
+    const htmlFile = new File({
+      contents: new Buffer(html),
+      path: `${(config.outputDir || 'dist')}/${l}${(f).replace('.pug', '.html').replace(config.templateDir || 'templates', '')}`,
+      base: `${(config.outputDir || 'dist')}`,
     });
-    cons.info('Build complete.');
-  })();
+    // cons.log(htmlFile.dirname, htmlFile.path);
+    mkdirp.sync(htmlFile.dirname);
+    fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
+    // cons.info(htmlFile.path, htmlFile.base);
+  };
+
+  config.langs.forEach((l) => {
+    templatesFiles.forEach((f) => {
+      buildPugFile(l, f);
+    });
+  });
+  cons.info('Build complete.');
 }
