@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node index.js",
-    "test": "npm run dev -- --testpug"
+    "test": "npm run dev -- --build"
   },
   "bin": {
     "thundaga": "index.js"
@@ -22,7 +22,7 @@
     "better-console": "^0.2.4",
     "globule": "^1.1.0",
     "i18n": "^0.8.3",
-    "marked": "^0.3.6",
+    "markdown-it": "^8.0.1",
     "mkdirp": "^0.5.1",
     "pug": "^2.0.0-beta6",
     "vinyl": "^2.0.0",

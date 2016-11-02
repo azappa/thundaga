@@ -4,4 +4,4 @@
 
 
 #### in development
-for testing `npm run dev -- --testpug`
+for testing `npm run dev -- --build`
