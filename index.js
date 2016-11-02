@@ -8,18 +8,8 @@ const globule = require('globule');
 const yargs = require('yargs').argv;
 const File = require('vinyl');
 const mkdirp = require('mkdirp');
-const marked = require('marked');
+const md = require('markdown-it')({ presetName: 'default' }, { linkify: true, typography: true, breaks: true });
 
-marked.setOptions({
-  renderer: new marked.Renderer(),
-  gfm: true,
-  tables: true,
-  breaks: true,
-  pedantic: false,
-  sanitize: true,
-  smartLists: true,
-  smartypants: false,
-});
 
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
 
@@ -29,7 +19,7 @@ const doesItExist = (s) => {
   try {
     return fs.realpathSync(s);
   } catch (e) {
-    // cons.error('> Error', e);
+    cons.error('> Error', e);
     return false;
   }
 };
@@ -42,7 +32,7 @@ if (!doesItExist('config.yaml')) {
 }
 
 const config = yaml.load('config.yaml');
-cons.info(`> Your config settings are: ${JSON.stringify(config)}`);
+cons.info(`> Your config settings are: ${JSON.stringify(config, null, 2)}\n`);
 
 
 if (!config.langs || config.langs.length < 1) {
@@ -82,7 +72,7 @@ if (yargs.init) {
 
 
 //  -- pug part --
-if (yargs.testpug) {
+if (yargs.build) {
   if (!doesItExist(config.templateDir || 'templates')) {
     cons.error('> Error, you don\'t set a template directory with pug files in your config.');
     process.exit();
@@ -95,15 +85,17 @@ if (yargs.testpug) {
     const params = Array.apply(null, args);
     const currentTranslations = yaml.load(`${config.localesDir}/${currentL}.yaml`) || {};
     if (Object.keys(currentTranslations).length === 0) {
+      cons.warn(`> Empty translation file for ${currentL}`);
       return `Empty translation file for ${currentL}`;
     }
     // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
     // cons.dir(currentTranslations);
 
-    const thisT = currentTranslations[params[0]] || `Missing translation for ${params[0]} ${currentL} in ${currentL} yaml file.`;
-    cons.info(`thisT is: ${currentTranslations[params[0]]}`);
+    const thisT = currentTranslations[params[0]] || `> Missing translation for ${params[0]} in ${currentL} yaml file.`;
+    cons.info(`Translation for ${params[0]} is: ${currentTranslations[params[0]]}`);
 
     if (params.length === 0) {
+      cons.warn(`> Empty translation file for ${currentL}`);
       return 'Cannot translate null key.';
     }
 
@@ -113,7 +105,7 @@ if (yargs.testpug) {
 
     switch (params[1]) {
       case 'markdown':
-        return marked(thisT);
+        return md.render(thisT);
       default:
         return thisT;
     }
@@ -121,7 +113,7 @@ if (yargs.testpug) {
 
 
   const templatesFiles = globule.find(`${(config.templateDir || 'templates')}/**/*.pug`);
-  cons.info(templatesFiles);
+  cons.info(`Files to compile are: ${templatesFiles}.\n`);
 
 
   const buildPugFile = (l, f) => {
