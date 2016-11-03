@@ -111,8 +111,11 @@ if (yargs.build) {
     }
   };
 
+  const filesToBuild = [`${(config.templateDir || 'templates')}/**/*.pug`];
+  const filesToExclude = config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`)) || [];
+  const finalFiles = filesToBuild.concat(filesToExclude);
 
-  const templatesFiles = globule.find(`${(config.templateDir || 'templates')}/**/*.pug`);
+  const templatesFiles = globule.find({ src: finalFiles });
   cons.info(`Files to compile are: ${templatesFiles}.\n`);
 
 

@@ -6,3 +6,5 @@ default: 'it'
 localesDir: 'locale'
 templateDir: 'templates'
 outputDir: 'build'
+skipBuild:
+  - _layout.pug
