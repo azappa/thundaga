@@ -112,7 +112,7 @@ if (yargs.build) {
   };
 
   const filesToBuild = [`${(config.templateDir || 'templates')}/**/*.pug`];
-  const filesToExclude = config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`)) || [];
+  const filesToExclude = config.skipBuild && config.skipBuild.length ? config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`)) : [];
   const finalFiles = filesToBuild.concat(filesToExclude);
 
   const templatesFiles = globule.find({ src: finalFiles });
