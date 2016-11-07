@@ -121,7 +121,7 @@ if (yargs.build) {
 
   const buildPugFile = (l, f) => {
     currentL = l;
-    const html = pug.renderFile(`${f}`, { $t, lang: currentL });
+    const html = pug.renderFile(`${f}`, { $t, lang: currentL, langs: config.langs });
     const htmlFile = new File({
       contents: new Buffer(html),
       path: `${(config.outputDir || 'dist')}/${l}${(f).replace('.pug', '.html').replace(config.templateDir || 'templates', '')}`,
