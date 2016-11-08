@@ -1,7 +1,5 @@
 langs:
   - it
-  - en
-  - ru
 default: 'it'
 localesDir: 'locale'
 templateDir: 'templates'
