@@ -8,7 +8,8 @@ const globule = require('globule');
 const yargs = require('yargs').argv;
 const File = require('vinyl');
 const mkdirp = require('mkdirp');
-const md = require('markdown-it')({ presetName: 'default' }, { linkify: true, typography: true, breaks: true });
+const md = require('markdown-it')({ linkify: true, typographer: true, breaks: true });
+const property = require('lodash').property;
 
 
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
@@ -84,6 +85,7 @@ if (yargs.build) {
     //  -- usually the first argument is the text / variable string --
     const params = Array.apply(null, args);
     const currentTranslations = yaml.load(`${config.localesDir}/${currentL}.yaml`) || {};
+
     if (Object.keys(currentTranslations).length === 0) {
       cons.warn(`> Empty translation file for ${currentL}`);
       return `Empty translation file for ${currentL}`;
@@ -91,8 +93,8 @@ if (yargs.build) {
     // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
     // cons.dir(currentTranslations);
 
-    const thisT = currentTranslations[params[0]] || `> Missing translation for ${params[0]} in ${currentL} yaml file.`;
-    cons.info(`Translation for ${params[0]} is: ${currentTranslations[params[0]]}`);
+    const thisT = property(params[0])(currentTranslations) || `> Missing translation for ${params[0]} in ${currentL} yaml file.`;
+    cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations)}`);
 
     if (params.length === 0) {
       cons.warn(`> Empty translation file for ${currentL}`);
@@ -105,7 +107,7 @@ if (yargs.build) {
 
     switch (params[1]) {
       case 'markdown':
-        return md.render(thisT);
+        return md.render(`${thisT}`);
       default:
         return thisT;
     }
