@@ -1,5 +1,11 @@
 title: 'titolo ita'
 text: >
-  testo ita
+  [link ita](http://google.it)
 subpage.title: 'titolo sottopagina ita'
 subpage.subtitle: 'sottotitolo sottopagina ita'
+
+subpage:
+  content: >
+    **Lorem ipsum dolor sit amet, consectetur adipiscing elit.**
+    
+    Pellentesque sed diam urna. Ut eget euismod metus, a laoreet mi. Sed sed leo sed nisi efficitur __elementum quis quis lorem__. Fusce eget metus id lacus aliquam tincidunt et sit amet leo. Ut ut ante ac nunc rhoncus congue. Nulla in mattis diam, eget pellentesque enim. Nullam non lectus aliquet, blandit nibh quis, egestas velit. Cras tincidunt risus quis laoreet vestibulum
