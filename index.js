@@ -28,21 +28,21 @@ const doesItExist = (s) => {
 
 //  -- config opts --
 if (!doesItExist('config.yaml')) {
-  cons.error('> Error, you do not have a config file.');
+  cons.error('Error, you do not have a config file.');
   process.exit();
 }
 
 const config = yaml.load('config.yaml');
-cons.info(`> Your config settings are: ${JSON.stringify(config, null, 2)}\n`);
+cons.info(`Your config settings are: ${JSON.stringify(config, null, 2)}\n`);
 
 
 if (!config.langs || config.langs.length < 1) {
-  cons.error('> Error, langs are not defined.');
+  cons.error('Error, langs are not defined.');
   process.exit();
 }
 
 if (!config.localesDir) {
-  cons.error('> Error, locales dir is not defined.');
+  cons.error('Error, locales dir is not defined.');
   process.exit();
 }
 
@@ -50,21 +50,21 @@ if (!config.localesDir) {
 if (yargs.init) {
   //  -- locales --
   if (!doesItExist(`${config.localesDir}`)) {
-    cons.warn('> Locale dir not found. Making dir now.');
+    cons.warn('Locale dir not found. Making dir now.');
     fs.mkdirSync(`${config.localesDir}`);
   }
 
   const locales = fs.readdirSync(`${config.localesDir}`);
   if (!locales || locales.length === 0) {
-    cons.warn(`> Error, you have zero translated yaml files into ${config.localesDir} for data loading. Creating them now.`);
+    cons.warn(`Error, you have zero translated yaml files into ${config.localesDir} for data loading. Creating them now.`);
     config.langs.forEach((l) => {
       cons.info(`> Creating file for ${l} in ${config.localesDir}/${l}.yaml`);
       fs.writeFileSync(`${config.localesDir}/${l}.yaml`, '', 'utf-8');
     });
   } else {
-    cons.warn('> You already got your files for translation.');
+    cons.warn('You already got your files for translation.');
     config.langs.forEach((l) => {
-      cons.info(`> Content for ${l} is `, yaml.load(`${config.localesDir}/${l}.yaml`));
+      cons.info(`Content for ${l} is `, yaml.load(`${config.localesDir}/${l}.yaml`));
     });
   }
 
@@ -85,19 +85,20 @@ if (yargs.build) {
     //  -- usually the first argument is the text / variable string --
     const params = Array.apply(null, args);
     const currentTranslations = yaml.load(`${config.localesDir}/${currentL}.yaml`) || {};
+    const defaultTranslations = yaml.load(`${config.localesDir}/${config.default}.yaml`) || {};
 
     if (Object.keys(currentTranslations).length === 0) {
-      cons.warn(`> Empty translation file for ${currentL}`);
+      cons.warn(`Empty translation file for ${currentL}`);
       return `Empty translation file for ${currentL}`;
     }
     // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
     // cons.dir(currentTranslations);
 
-    const thisT = property(params[0])(currentTranslations) || `> Missing translation for ${params[0]} in ${currentL} yaml file.`;
-    cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations)}`);
+    const thisT = property(params[0])(currentTranslations) || `(default lang translation, missing the one for ${currentL}) -- ${property(params[0])(defaultTranslations)}` || `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
+    cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations) || property(params[0])(defaultTranslations)}`);
 
     if (params.length === 0) {
-      cons.warn(`> Empty translation file for ${currentL}`);
+      cons.warn(`Empty translation file for ${currentL}`);
       return 'Cannot translate null key.';
     }
 
@@ -123,7 +124,7 @@ if (yargs.build) {
 
   const buildPugFile = (l, f) => {
     currentL = l;
-    const html = pug.renderFile(`${f}`, { $t, lang: currentL, langs: config.langs });
+    const html = pug.renderFile(`${f}`, { $t, lang: currentL, langs: config.langs, defaultLang: config.default });
     const htmlFile = new File({
       contents: new Buffer(html),
       path: `${(config.outputDir || 'dist')}/${l}${(f).replace('.pug', '.html').replace(config.templateDir || 'templates', '')}`,
