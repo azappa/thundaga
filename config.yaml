@@ -1,5 +1,6 @@
 langs:
   - it
+  - en
 default: 'it'
 localesDir: 'locale'
 templateDir: 'templates'
