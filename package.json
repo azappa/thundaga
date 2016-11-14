@@ -1,6 +1,6 @@
 {
   "name": "thundaga",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Multilang static site builder with pug and yaml files for translations.",
   "main": "index.js",
   "scripts": {
