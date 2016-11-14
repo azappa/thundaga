@@ -94,7 +94,7 @@ if (yargs.build) {
     // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
     // cons.dir(currentTranslations);
 
-    const thisT = property(params[0])(currentTranslations) || `(default lang translation, missing the one for ${currentL}) -- ${property(params[0])(defaultTranslations)}` || `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
+    const thisT = property(params[0])(currentTranslations) || `${(config.showMissing ? `{{ default lang translation, missing the one for ${currentL} }} ` : `{{ ${config.default} }}`)} ${property(params[0])(defaultTranslations)}` || `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
     cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations) || property(params[0])(defaultTranslations)}`);
 
     if (params.length === 0) {
