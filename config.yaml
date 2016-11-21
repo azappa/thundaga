@@ -3,6 +3,7 @@ langs:
   - en
 default: 'it'
 showMissing: false
+debug: false
 localesDir: 'locale'
 templateDir: 'templates'
 outputDir: 'build'

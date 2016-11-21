@@ -11,9 +11,7 @@ const mkdirp = require('mkdirp');
 const md = require('markdown-it')({ linkify: true, typographer: true, breaks: true });
 const property = require('lodash').property;
 
-
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
-
 
 //  -- check if file or dir exists --
 const doesItExist = (s) => {
@@ -25,7 +23,6 @@ const doesItExist = (s) => {
   }
 };
 
-
 //  -- config opts --
 if (!doesItExist('config.yaml')) {
   cons.error('Error, you do not have a config file.');
@@ -33,8 +30,10 @@ if (!doesItExist('config.yaml')) {
 }
 
 const config = yaml.load('config.yaml');
-cons.info(`Your config settings are: ${JSON.stringify(config, null, 2)}\n`);
 
+if (config.debug) {
+  cons.info(`Your config settings are: ${JSON.stringify(config, null, 2)}\n`);
+}
 
 if (!config.langs || config.langs.length < 1) {
   cons.error('Error, langs are not defined.');
@@ -45,7 +44,6 @@ if (!config.localesDir) {
   cons.error('Error, locales dir is not defined.');
   process.exit();
 }
-
 
 if (yargs.init) {
   //  -- locales --
@@ -71,7 +69,6 @@ if (yargs.init) {
   process.exit();
 }
 
-
 //  -- pug part --
 if (yargs.build) {
   if (!doesItExist(config.templateDir || 'templates')) {
@@ -94,8 +91,14 @@ if (yargs.build) {
     // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
     // cons.dir(currentTranslations);
 
-    const thisT = property(params[0])(currentTranslations) || `${(config.showMissing ? `{{ default lang translation, missing the one for ${currentL} }} ` : `{{ ${config.default} }}`)} ${property(params[0])(defaultTranslations)}` || `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
-    cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations) || property(params[0])(defaultTranslations)}`);
+    const thisT = property(params[0])(currentTranslations) ||
+      `${(config.showMissing ?
+        `{{ default lang translation, missing the one for ${currentL} }} ` : `{{ ${config.default} }}`)} ${property(params[0])(defaultTranslations)}` ||
+      `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
+
+    if (config.debug) {
+      cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations) || property(params[0])(defaultTranslations)}`);
+    }
 
     if (params.length === 0) {
       cons.warn(`Empty translation file for ${currentL}`);
@@ -115,12 +118,15 @@ if (yargs.build) {
   };
 
   const filesToBuild = [`${(config.templateDir || 'templates')}/**/*.pug`];
-  const filesToExclude = config.skipBuild && config.skipBuild.length ? config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`)) : [];
+  const filesToExclude = config.skipBuild && config.skipBuild.length ?
+    config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`)) :
+    [];
   const finalFiles = filesToBuild.concat(filesToExclude);
-
   const templatesFiles = globule.find({ src: finalFiles });
-  cons.info(`Files to compile are: ${templatesFiles}.\n`);
 
+  if (config.debug) {
+    cons.info(`Files to compile are: ${templatesFiles}.\n`);
+  }
 
   const buildPugFile = (l, f) => {
     currentL = l;
