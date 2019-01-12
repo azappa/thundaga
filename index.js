@@ -9,7 +9,7 @@ const yargs = require('yargs').argv;
 const File = require('vinyl');
 const mkdirp = require('mkdirp');
 const md = require('markdown-it')({ linkify: true, typographer: true, breaks: true });
-const property = require('lodash').property;
+const property = require('lodash.property');
 
 cons.info(`> Called script with these parameters: ${JSON.stringify(yargs)}`);
 
@@ -88,16 +88,16 @@ if (yargs.build) {
       cons.warn(`Empty translation file for ${currentL}`);
       return `Empty translation file for ${currentL}`;
     }
-    // cons.info(`parameters are > ${params}, currentL is ${currentL} and currentTranslations are (below).`);
-    // cons.dir(currentTranslations);
 
-    const thisT = property(params[0])(currentTranslations) ||
-      `${(config.showMissing ?
-        `{{ default lang translation, missing the one for ${currentL} }} ` : `{{ ${config.default} }}`)} ${property(params[0])(defaultTranslations)}` ||
-      `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
+    const thisT = property(params[0])(currentTranslations) || `${(config.showMissing
+      ? `{{ default lang translation, missing the one for ${currentL} }}`
+      : `{{ ${config.default} }}`)} ${property(params[0])(defaultTranslations)}` || `Missing translation for ${params[0]} in ${currentL} and ${config.default} yaml file.`;
 
     if (config.debug) {
       cons.info(`Translation for ${params[0]} is: ${property(params[0])(currentTranslations) || property(params[0])(defaultTranslations)}`);
+    }
+    if (config.debug) {
+      cons.info(`Translation for ${params[0]} is: ${currentTranslations[params[0]] || defaultTranslations[params[0]]}`);
     }
 
     if (params.length === 0) {
@@ -118,9 +118,9 @@ if (yargs.build) {
   };
 
   const filesToBuild = [`${(config.templateDir || 'templates')}/**/*.pug`];
-  const filesToExclude = config.skipBuild && config.skipBuild.length ?
-    config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`)) :
-    [];
+  const filesToExclude = config.skipBuild && config.skipBuild.length
+    ? config.skipBuild.map(f => (`!${(config.templateDir || 'templates')}/${f}`))
+    : [];
   const finalFiles = filesToBuild.concat(filesToExclude);
   const templatesFiles = globule.find({ src: finalFiles });
 
@@ -130,16 +130,17 @@ if (yargs.build) {
 
   const buildPugFile = (l, f) => {
     currentL = l;
-    const html = pug.renderFile(`${f}`, { $t, lang: currentL, langs: config.langs, defaultLang: config.default });
-    const htmlFile = new File({
-      contents: new Buffer(html),
-      path: `${(config.outputDir || 'dist')}/${l}${(f).replace('.pug', '.html').replace(config.templateDir || 'templates', '')}`,
-      base: `${(config.outputDir || 'dist')}`,
+    const html = pug.renderFile(`${f}`, {
+      $t, lang: currentL, langs: config.langs, defaultLang: config.default
     });
-    // cons.log(htmlFile.dirname, htmlFile.path);
+    const htmlFile = new File({
+      contents: Buffer.from(html),
+      path: `${(config.outputDir || 'dist')}/${l}${(f).replace('.pug', '.html').replace(config.templateDir || 'templates', '')}`,
+      base: `${(config.outputDir || 'dist')}`
+    });
+
     mkdirp.sync(htmlFile.dirname);
     fs.writeFileSync(htmlFile.path, htmlFile.contents, 'utf-8');
-    // cons.info(htmlFile.path, htmlFile.base);
   };
 
   config.langs.forEach((l) => {
